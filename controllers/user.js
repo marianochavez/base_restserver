@@ -1,42 +1,61 @@
 const { request, response } = require("express");
+const { validationResult } = require("express-validator");
+const bcryptjs = require("bcryptjs");
+const Usuario = require("../models/user");
 
-const userGet = (req = request, res = response) => {
-  const { q, nombre } = req.query;
-  res.status(200).json({
-    msg: "get API - controlador",
-    q,
-    nombre,
-  });
+const userGet = async (req = request, res = response) => {
+  const { limite = 5, desde = 0 } = req.query;
+  const query = { state: true };
+
+  const [total, usuarios] = await Promise.all([
+    Usuario.countDocuments(query),
+    Usuario.find(query).skip(Number(desde)).limit(Number(limite)),
+  ]);
+
+  res.json({ total, usuarios });
 };
 
-const userPut = (req, res = response) => {
+const userPut = async (req, res = response) => {
   const { id } = req.params;
-  res.status(400).json({
-    msg: "put API - controlador",
-    id,
-  });
+  const { _id, correo, password, google, ...resto } = req.body;
+
+  if (password) {
+    const salt = bcryptjs.genSaltSync();
+    resto.password = bcryptjs.hashSync(password, salt);
+  }
+
+  const usuario = await Usuario.findByIdAndUpdate(id, resto);
+
+  res.json(usuario);
 };
 
-const userPost = (req, res = response) => {
-  const { nombre, edad } = req.body;
+const userPost = async (req, res = response) => {
+  const { nombre, correo, password, rol } = req.body;
+  const usuario = new Usuario({ nombre, correo, password, rol });
 
-  res.status(201).json({
-    msg: "post - controlador",
-    nombre,
-    edad,
-  });
+  // encriptar pass
+  const salt = bcryptjs.genSaltSync();
+  usuario.password = bcryptjs.hashSync(password, salt);
+
+  await usuario.save();
+
+  res.json(usuario);
 };
 
 const userPatch = (req, res = response) => {
-  res.json({
-    msg: "patch API - controlador",
-  });
+  res.json({});
 };
 
-const userDelete = (req, res = response) => {
-  res.json({
-    msg: "delete API - controlador",
-  });
+const userDelete = async (req, res = response) => {
+  const { id } = req.params;
+
+  // Fisica
+  // const usuario = await Usuario.findByIdAndDelete(id);
+
+  // Logica
+  const usuario = await Usuario.findByIdAndUpdate(id, {state:false})
+
+  res.json({ usuario });
 };
 
 module.exports = {
