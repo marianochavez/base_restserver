@@ -34,7 +34,8 @@ const UsuarioSchema = Schema({
 
 UsuarioSchema.methods.toJSON = function () {
   // Modifico el JSON del response para no mostrar la pass y __v
-  const { __v, password, ...usuario } = this.toObject();
+  const { __v, password, _id, ...usuario } = this.toObject();
+  usuario.uid = _id;
   return usuario;
 };
 

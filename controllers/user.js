@@ -49,13 +49,9 @@ const userPatch = (req, res = response) => {
 const userDelete = async (req, res = response) => {
   const { id } = req.params;
 
-  // Fisica
-  // const usuario = await Usuario.findByIdAndDelete(id);
-
-  // Logica
   const usuario = await Usuario.findByIdAndUpdate(id, {state:false})
 
-  res.json({ usuario });
+  res.json({ usuario});
 };
 
 module.exports = {
